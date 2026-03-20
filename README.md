@@ -796,12 +796,18 @@ type AuthResult = {
 
 **Important note:** RSA keys are stored in the regular keychain (not Secure Enclave on iOS) and may have different security characteristics compared to EC256 keys. For maximum security, EC256 keys are recommended as they can leverage hardware-backed storage when available.
 
-#### `createKeys(keyAlias?: string, keyType?: 'ec256' | 'rsa2048')`
+#### `createKeys(keyAlias?: string, keyType?: 'ec256' | 'rsa2048', biometricStrength?: 'weak' | 'strong', allowDeviceCredentials?: boolean, failIfExists?: boolean)`
 
 Generates cryptographic keys for secure biometric operations. Optionally accepts a custom key alias and key type.
 
 ```typescript
-const createKeys = (keyAlias?: string, keyType?: 'ec256' | 'rsa2048'): Promise<KeyResult> => {
+const createKeys = (
+  keyAlias?: string,
+  keyType?: 'ec256' | 'rsa2048',
+  biometricStrength?: 'weak' | 'strong',
+  allowDeviceCredentials?: boolean,
+  failIfExists?: boolean
+): Promise<KeyResult> => {
 };
 
 type KeyResult = {
@@ -812,6 +818,14 @@ type KeyResult = {
 **Parameters:**
 - `keyAlias` (optional): Custom key identifier. If not provided, uses the configured default alias.
 - `keyType` (optional): Type of cryptographic key to generate. Defaults to `'ec256'` on iOS and `'rsa2048'` on Android.
+- `biometricStrength` (optional): On iOS, `strong` binds new keys to `.biometryCurrentSet`; `weak`/unset uses `.biometryAny` for backward compatibility.
+- `allowDeviceCredentials` (optional): If `true`, uses `.userPresence` policy to allow passcode fallback.
+- `failIfExists` (optional): If `true`, key creation fails when a key already exists for the alias.
+
+**iOS migration guidance**
+- Existing keys keep the access-control policy they were created with; this setting only affects newly created keys.
+- If you switch iOS key creation to `biometricStrength: 'strong'`, recreate keys (delete + create) to migrate.
+- Keys created with `.biometryCurrentSet` are invalidated when biometric enrollment changes.
 
 > 📖 **For detailed key type information, security considerations, and advanced usage patterns, see the [Cryptographic Keys Guide](./docs/CRYPTOGRAPHIC_KEYS.md)**
 
